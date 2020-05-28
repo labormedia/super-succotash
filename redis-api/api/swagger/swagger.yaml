@@ -1,0 +1,470 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Redis API
+# during dev, should point to your local machine
+host: localhost:10010
+# basePath prefixes all resource paths 
+basePath: /api
+# 
+schemes:
+  # tip: remove http to make production-grade
+  # - http
+  - https
+# format of bodies a client can send (Content-Type)
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    in: header
+    name: Authorization
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /v1/tenant/add:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: tenant-controller
+    post:
+      description: Add a tenant
+      # used as the method name of the controller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+      operationId: addTenant
+      parameters:
+        - name: username
+          in: body
+          description: The id of the user registry to retrieve
+          required: true
+          schema:
+            $ref: "#/definitions/Authentication"
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ServiceResponse"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/user/add:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: user-controller
+    post:
+      description: Add a user
+      # used as the method name of the controller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+      operationId: addUser
+      parameters:
+        - name: credentials
+          in: body
+          description: The credentials of the user to register
+          required: true
+          schema:
+            $ref: "#/definitions/Authentication"
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ServiceResponse"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/user/update:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: user-controller
+    post:
+      description: Update metadata of a user
+      # used as the method name of the controller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+      operationId: updateUser
+      parameters:
+        - name: credentials
+          in: body
+          description: The credentials of the user to update
+          required: true
+          schema:
+            $ref: "#/definitions/Authentication"
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ServiceResponse"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/user/remove:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: user-controller
+    post:
+      description: Remove a user
+      # used as the method name of the controller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+      operationId: removeUser
+      parameters:
+        - name: metadata
+          in: body
+          description: The metadata of the user to remove
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ServiceResponse"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/user/get/{attribute}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: user-controller
+    post:
+      description: Remove a user
+      # used as the method name of the controller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+        - admin
+      operationId: getAttribute
+      parameters:
+        - name: attribute
+          in: path
+          description: Attribute to retrieve
+          required: true
+          type: string
+        - name: user
+          in: body
+          description: User to retrive attribute from
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ServiceResponse"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/room/join:
+    x-swagger-router-controller: room-controller
+    post:
+      description: Returns user registry to the caller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+        - user
+      operationId: joinRoom
+      parameters:
+        - name: metadata
+          in: body
+          description: The metadata of the room to join or create.
+          required: true
+          schema:
+            $ref: "#/definitions/Room"
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/RoomJoined"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/room/{id}/get/{number}:
+    x-swagger-router-controller: room-controller
+    get:
+      description: Returns room messages
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+        - user
+      operationId: getMessages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: number
+          in: path
+          required: true
+          type: number
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Resource"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/room/{id}/poll:
+    x-swagger-router-controller: room-controller
+    get:
+      description: Returns user registry to the caller
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+        - user
+      operationId: pollNewMessages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Resource"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/room/{id}/send:
+    x-swagger-router-controller: room-controller
+    post:
+      description: Returns user registry to the caller.
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+        - user
+      operationId: sendMessage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: metadata
+          in: body
+          description: The metadata of the message to send.
+          required: true
+          schema:
+            $ref: "#/definitions/Message"
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Resource"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/login/{role}:
+    x-swagger-router-controller: login-controller
+    post:
+      description: Login logic
+      operationId: login
+      parameters:
+        - name: role
+          in: path
+          required: true
+          type: string
+        - name: authentication
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Authentication"
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Resource"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /v1/ping:
+    x-swagger-router-controller: main-controller
+    get:
+      description: Pings the service for availability check
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - admin
+        - user
+      operationId: ping
+      parameters:
+        - name: msg
+          in: query
+          description: Any value
+          required: false
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ServiceResponse"
+        "403":
+          description: "Access Denied"
+          schema:
+            $ref: "#/definitions/Error"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  Authentication:
+    properties:
+      username:
+        type: string
+        example: "username"
+      password:
+        type: string
+        example: "password"
+      domain:
+        type: string
+        example: "ibm"
+      role:
+        type: string
+        example: "user"
+  Room:
+    properties:
+      username:
+        type: string
+        example: "username"
+      title:
+        type: string
+        example: "The fox inside the box"
+      domain:
+        type: string
+        example: "ibm"
+  RoomJoined:
+    properties:
+      room:
+        type: string
+        description: room id
+      messages:
+        type: string
+        description: last messages
+      messageId:
+        type: string
+        description: message id since join
+  User:
+    properties:
+      username:
+        type: string
+        example: "username"
+      domain:
+        type: string
+        example: "ibm"
+      role:
+        type: string
+        example: "admin"
+  Message:
+    properties:
+      channel: 
+        type: string
+        example: "2ae09488a724a1293ed2d7b9b705415f"
+      domain:
+        type: string
+        example: "redis"
+      id: 
+        type: string
+        example: "1590673667143-0"
+      message: 
+        type: string
+        example: "superuser has joined the channel."
+      title: 
+        type: string
+        example: "My second room"
+      user: 
+        type: string
+        example: "superuser"
+  Resource:
+    properties:
+      resource:
+        type: string
+  Error:
+    properties:
+      message:
+        type: string
+  ServiceResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string

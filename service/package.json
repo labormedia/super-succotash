@@ -1,0 +1,22 @@
+{
+  "name": "loopback-boilerplate",
+  "version": "0.0.1",
+  "description": "Loopback Boilerplate",
+  "main": "server.js",
+  "scripts": {
+    "local": "NODE_ENV=local node service/server.js",
+    "development": "NODE_ENV=development node service/server.js",
+    "production": "NODE_ENV=production node service/server.js"
+  },
+  "author": "Diego Correa T. <algoritmia@labormedia.cl>",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "redis": "^3.0.2",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "socketio-wildcard": "^2.0.0"
+  }
+}

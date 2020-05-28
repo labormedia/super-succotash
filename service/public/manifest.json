@@ -1,0 +1,9 @@
+{
+    "name": "Our Progressive Web Chat App",
+    "short_name": "Our Chat",
+    "description": "Progressive Web App that let employees chat during working hours.",
+    "start_url": "/test/index.html",
+    "display": "fullscreen",
+    "theme_color": "#B12A34",
+    "background_color": "#B12A34"
+}

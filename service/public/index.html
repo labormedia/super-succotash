@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+    <head>
+    <title>Progressive Boilerplate chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 13px Helvetica, Arial; }
+        body, html{height:100%}
+        form { background: rgb(139, 129, 115); padding: 1px; margin: 0px; width: 100%; height: 90px; }
+        form input { border: 0; font: 2vw Helvetica, Arial; padding: 10px; width: 85%; height: 80px; margin: 0px; }
+        form button { width: 15%; background: rgb(115, 139, 132); border: none; height: 100%; }
+        #messages { list-style-type: none; margin: 0; padding: 0; width:100%; height: 100%; max-height: 100vh; overflow: scroll;}
+        #messages li { padding: 5px 10px; width:100%;}
+        #messages li:nth-child(odd) { background: #eee; width:100%;}
+        table { width: 100%; height:100%; padding: 0px; margin: 0px;}
+        table, tr { height: 100%; width:100%;}
+        table, td { border: 1px solid #333; }
+        .messages { width: 90vw; text-overflow: clip; white-space: nowrap; max-width: 80vw;}
+        .rooms { overflow:scroll; width: 13vw; max-width: 13vw;}
+    </style>
+    </head>
+    <body>
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2">Progressive Web App Chat Demo</th>
+                    <form action="/login" method="post">
+                        <!-- <div class="imgcontainer">
+                          <img src="noimage.png" alt="Avatar" class="avatar">
+                        </div> -->
+                      
+                        <div class="container">
+                          <label for="username"><b>Username</b></label>
+                          <input type="text" placeholder="Enter Username" name="username" required>
+                      
+                          <label for="password"><b>Password</b></label>
+                          <input type="password" placeholder="Enter Password" name="password" required>
+                      
+                          <button type="submit">Login</button>
+                          <label>
+                            <input type="checkbox" checked="checked" name="remember"> Remember me
+                            <input type="hidden" name="domain" value="redis">
+                            <input type="hidden" name="role" value="admin">
+                          </label>
+                        </div>
+                      
+                        <!-- <div class="container" style="background-color:#f1f1f1">
+                          <button type="button" class="sendbtn">Cancel</button>
+                          <span class="psw">Forgot <a href="#">password?</a></span>
+                        </div> -->
+                      </form>
+                </tr>
+            </thead>
+            <tbody>
+                <tr >
+                    <td class="messages">
+                        <ul id="messages"><li>messages:</li></ul>
+                    </td>
+                    <td class="rooms" id="room_holder">
+                        <ul id="rooms"><li>rooms:</li></ul>
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">
+                        <form id="unique_form" action="">
+                            <input id="m" autocomplete="off" /><button id="send_button">Send</button>
+                        </form>
+                    </td>
+                </tr>
+
+            </tfoot>
+        </table>
+
+    </body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        STATUS = 'disconnected'
+        APP_STATE = { 
+            messages:{}, 
+            check: [],
+            active: ''
+        }
+        const init = async () => {
+            const mycookie = ('serviceWorker' in navigator) ? 
+                await navigator.serviceWorker.register('/sw.js')
+                    .then( (worker) => {
+                        console.log('Service Worker registered.', worker)
+                        const cookie = getCookie('demochat-token')
+                        console.log('cookie', cookie)
+                        const token = JSON.parse( cookie != undefined  ? cookie : '{ "token" : "no_token" }' )//.token
+                        return token
+                    })
+            :
+                0
+            console.log('mycookie', mycookie)
+            var socket = io({
+                // option 1
+                // ca: fs.readFileSync('server-cert.pem'),
+
+                // option 2. WARNING: it leaves you vulnerable to MITM attacks!
+                rejectUnauthorized: false
+            });
+            function getCookie(name) {
+                var nameEQ = name + "=";
+                var ca = document.cookie.split(';');
+                const token = ca.filter( (x,i) => nameEQ == x.slice(0,nameEQ.length ) ).map( x => decodeURIComponent(x).slice(nameEQ.length,x.length))
+                return token[0]
+            }
+            const newElement = (msg, room, id, action) => {
+                var node = document.createElement("LI");
+                var text = document.createTextNode(msg)
+                node.appendChild(text)
+                var toAppend = document.createElement('LI').appendChild(node)
+                toAppend.setAttribute('id', id)
+                action ? node.onclick = () => action(id) : null
+                document.getElementById(room).appendChild(toAppend)
+            }
+            const emptyList = (room) => {
+                const root = document.getElementById(room)
+                while( root.firstChild ){
+                    root.removeChild( root.firstChild );
+                }
+            }
+            const updateRooms = () => {}
+            socket.on('chat message', function(msg) {
+                const room = 'messages'
+                msg == '' ? 0 : newElement(msg, room)
+            });
+            document.getElementById('unique_form').addEventListener('submit', (e) => e.preventDefault(), false);
+            document.getElementById("send_button").addEventListener("click", function(e){
+                console.log('DEBUB: user click')
+                const m = document.getElementById('m')
+                e.preventDefault(); // prevents page reloading
+                socket.emit('/send/message', { "message": m.value, "token":mycookie.token, "cookie":mycookie, "room": APP_STATE.active });
+                m.value = '';
+                return false;
+            })
+            let lastping = ''
+            socket.on('ping', function(msg) {
+                lastping != msg ? connect() : disconnect()
+                lastping = msg
+            });
+            socket.on('disconnect', function() {
+                console.log('Got disconnect!');
+                disconnect()
+            });
+            socket.on('connect', function() {
+                console.log('Socket connected');
+                socket.emit('/get/rooms', mycookie);
+                connect()
+            });            
+            socket.on('#rooms', function(rooms) {
+                console.log('ROOMS', rooms)
+                const active = (room) => {
+                    console.log(room,'active')
+                    emptyList('messages')
+                    socket.emit('/get/messages', { rooms: [room] , token: mycookie.token})
+                    APP_STATE.active = room
+                }
+                const next = typeof rooms != undefined && Array.isArray(rooms) && rooms.length > 0 ? () => 
+                    {
+                        rooms.map( x => newElement(x, 'rooms', x, active) )
+                        socket.emit('/get/messages', { rooms: rooms , token: mycookie.token})
+                    }
+                : 
+                    () => null
+                next()
+            });
+            socket.on('#messages', function(data) {
+                console.log('MESSAGES', data.messages)
+                const next = typeof data != undefined && Array.isArray(data.messages) && data.messages.length > 0 ? () => 
+                    {
+                        APP_STATE.messages = APP_STATE.messages[data.room] ? APP_STATE.messages[data.room].concat(data.messages) : data.messages
+                        APP_STATE.check = APP_STATE.check.concat([data.room])
+                        data.messages.map( x => newElement(JSON.stringify(x), 'messages', x.id) )
+                    }
+                : 
+                    () => null
+                next()
+            });
+            setInterval( () => {
+                // socket.emit('/ping', { "value": m.value, "token":mycookie.token, "cookie":mycookie });
+                if ( !mycookie.token || mycookie.token == 'no_token') disconnect()
+            }, 1000)
+
+            
+        }
+        init()
+
+        const connect = () => {
+            document.getElementById("send_button").setAttribute("style", "background-color: rgb(115, 139, 132);")
+            STATUS = 'connected'
+        }
+
+        const disconnect = () => {
+            document.getElementById("send_button").setAttribute("style", "background-color: #f44336;")
+            STATUS = 'disconnected'
+        }
+
+    </script>
+</html>

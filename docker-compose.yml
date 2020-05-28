@@ -1,0 +1,14 @@
+version: '3.3'
+services:
+ redis:
+    image: redis
+    networks:
+      tests:
+        ipv4_address: 172.16.238.10
+    ports: 
+     - 6379
+    labels:
+     - redis
+networks:
+  tests:
+    external: true
