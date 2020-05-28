@@ -9,36 +9,37 @@ El proyecto consiste en una unidad de prueba de concepto para una interfaz de ap
 
 El enfasis de diseño está puesto en el performance y minimalismo del backend. El front-end está obviado a su mínimo viable.
 
-Ambiente: Ubuntu Linux 20.04
+    Ambiente: Ubuntu Linux 20.04
 
-Dependencias para el runtime:
-    Docker version 18.09.9, build 1752eb3
-    docker-compose version 1.23.2, build unknown
-    GNU Make 4.2.1 Built for x86_64-pc-linux-gnu
-    Node JS v15.0.0
+    Dependencias para el runtime e instalación:
+        OpenSSL 1.1.1f  31 Mar 2020
+        Docker version 18.09.9, build 1752eb3
+        docker-compose version 1.23.2, build unknown
+        GNU Make 4.2.1 Built for x86_64-pc-linux-gnu
+        Node JS v15.0.0
 
-Dependencia para la documentación:
-    Swagger 0.7.5
+    Dependencia para la documentación:
+        Swagger 0.7.5
 
-Para construir por primera vez:
-    make configure
-    make all                        #(introducir frase para los certificados, ex: "simplephrase")
+    Para construir por primera vez:
+        make configure
+        make all                        #(introducir frase para los certificados, ex: "simplephrase")
 
-Para ejecutar:
-	make run                        #(una vez instalado y corriendo, se puede entrar a la aplicación en la dirección local http://127.0.0.1:3000)    
-                                    #(el proyecto se inicia con un usuario administrador de clave y contraseña muy simples a modo de prueba)
-                                    #(usuario: "superuser", password: "cat")
+    Para ejecutar:
+        make run                        #(una vez instalado y corriendo, se puede entrar a la aplicación en la dirección local http://127.0.0.1:3000)    
+                                        #(el proyecto se inicia con un usuario administrador de clave y contraseña muy simples a modo de prueba)
+                                        #(usuario: "superuser", password: "cat")
 
-Para debug:
-    make debug
+    Para debug:
+        make debug
 
-Para detener la ejecución
-    make stop
+    Para detener la ejecución
+        make stop
 
-Para desinstalar:
-    make clean
-    make undocker
+    Para desinstalar:
+        make clean
+        make undocker
 
-Para levantar la documentación de API REST:
-    make docs
+    Para levantar la documentación de API REST:
+        make docs
 
