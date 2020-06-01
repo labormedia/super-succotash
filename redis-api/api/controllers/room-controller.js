@@ -129,10 +129,10 @@ async function sendMessage (args,res) {
         console.log('previous Object', previousObject)
         const messageId = isMember ? await commands.xadd(roomMD5, '*', 'message', message, 'user', username, 'title', title != '' ? title : previousObject.title, 'domain',domain, 'room', roomMD5) : previousObject.room;
         console.log('message id',messageId)
-        const messages = await commands.xrange(roomMD5,'-', '+', 'COUNT', 25);
+        const messages = await commands.xrevrange(roomMD5,'+', '-', 'COUNT', 25);
         
         console.log('messages',messages)
-        var response = messageId ? `{ "room": "${roomMD5}", "messages": ${JSON.stringify(messages)}, "messageId": "${messageId}" }` : `{ "message": "No connection." }`
+        var response = messageId ? `{ "room": "${roomMD5}", "messages": ${JSON.stringify(messages.reverse())}, "messageId": "${messageId}" }` : `{ "message": "No connection." }`
         return res.status(200).end(response);
       } else {
         var response = `{ "Error": "user or domain does not exist" }`

@@ -133,7 +133,7 @@
             });
             document.getElementById('unique_form').addEventListener('submit', (e) => e.preventDefault(), false);
             document.getElementById("send_button").addEventListener("click", function(e){
-                console.log('DEBUB: user click')
+                console.log('DEBUB: user send')
                 const m = document.getElementById('m')
                 e.preventDefault(); // prevents page reloading
                 socket.emit('/send/message', { "message": m.value, "token":mycookie.token, "cookie":mycookie, "room": APP_STATE.active });
@@ -173,7 +173,8 @@
                 next()
             });
             socket.on('#messages', function(data) {
-                console.log('MESSAGES', data.messages)
+                // console.log('MESSAGES', data.messages)
+                emptyList('messages')
                 const next = typeof data != undefined && Array.isArray(data.messages) && data.messages.length > 0 ? () => 
                     {
                         APP_STATE.messages = APP_STATE.messages[data.room] ? APP_STATE.messages[data.room].concat(data.messages) : data.messages

@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
         const options = {
           hostname: '127.0.0.1',
           port: 10443,
-          path: `/api/v1/room/`+[id,'get',10].join('/'),
+          path: `/api/v1/room/`+[id,'get',25].join('/'),
           METHOD: 'GET',
           token: data.token,
           headers: {
