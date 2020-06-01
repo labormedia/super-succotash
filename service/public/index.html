@@ -6,9 +6,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font: 13px Helvetica, Arial; }
         body, html{height:100%}
-        form { background: rgb(139, 129, 115); padding: 1px; margin: 0px; width: 100%; height: 90px; }
-        form input { border: 0; font: 2vw Helvetica, Arial; padding: 10px; width: 85%; height: 80px; margin: 0px; }
-        form button { width: 15%; background: rgb(115, 139, 132); border: none; height: 100%; }
+        .send form { background: rgb(139, 129, 115); padding: 1px; margin: 0px; width: 100%; height: 90px; }
+        .send form input { border: 0; font: 2vw Helvetica, Arial; padding: 10px; width: 85%; height: 80px; margin: 0px; }
+        .send form button { width: 15%; background: rgb(115, 139, 132); border: none; height: 100%; }
         #messages { list-style-type: none; margin: 0; padding: 0; width:100%; height: 100%; max-height: 100vh; overflow: scroll;}
         #messages li { padding: 5px 10px; width:100%;}
         #messages li:nth-child(odd) { background: #eee; width:100%;}
@@ -16,39 +16,42 @@
         table, tr { height: 100%; width:100%;}
         table, td { border: 1px solid #333; }
         .messages { width: 90vw; text-overflow: clip; white-space: nowrap; max-width: 80vw;}
-        .rooms { overflow:scroll; width: 13vw; max-width: 13vw;}
+        .rooms { overflow:scroll; width: 13vw; max-width: 21vw;}
     </style>
     </head>
     <body>
         <table>
             <thead>
                 <tr>
-                    <th colspan="2">Progressive Web App Chat Demo</th>
-                    <form action="/login" method="post">
-                        <!-- <div class="imgcontainer">
-                          <img src="noimage.png" alt="Avatar" class="avatar">
-                        </div> -->
-                      
+                    <td colspan="1">
                         <div class="container">
-                          <label for="username"><b>Username</b></label>
-                          <input type="text" placeholder="Enter Username" name="username" required>
-                      
-                          <label for="password"><b>Password</b></label>
-                          <input type="password" placeholder="Enter Password" name="password" required>
-                      
-                          <button type="submit">Login</button>
-                          <label>
-                            <input type="checkbox" checked="checked" name="remember"> Remember me
-                            <input type="hidden" name="domain" value="redis">
-                            <input type="hidden" name="role" value="admin">
-                          </label>
+                            <form action="/login" method="post">
+                                <!-- <div class="imgcontainer">
+                                <img src="noimage.png" alt="Avatar" class="avatar">
+                                </div> -->
+                            
+                                
+                                <label for="username"><b>Username</b></label>
+                                <input type="text" placeholder="Enter Username" name="username" required>
+                            
+                                <label for="password"><b>Password</b></label>
+                                <input type="password" placeholder="Enter Password" name="password" required>
+                            
+                                <button type="submit">Login</button>
+                                <label>
+                                    <input type="checkbox" checked="checked" name="remember"> Remember me
+                                    <input type="hidden" name="domain" value="redis">
+                                    <input type="hidden" name="role" value="admin">
+                                </label>
+                            
+                                <!-- <div class="container" style="background-color:#f1f1f1">
+                                <button type="button" class="sendbtn">Cancel</button>
+                                <span class="psw">Forgot <a href="#">password?</a></span>
+                                </div> -->
+                            </form>
                         </div>
-                      
-                        <!-- <div class="container" style="background-color:#f1f1f1">
-                          <button type="button" class="sendbtn">Cancel</button>
-                          <span class="psw">Forgot <a href="#">password?</a></span>
-                        </div> -->
-                      </form>
+                    </td>
+                    <td colspan="1">Progressive Web App Chat</td>
                 </tr>
             </thead>
             <tbody>
@@ -63,7 +66,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="2">
+                    <td colspan="2" class="send">
                         <form id="unique_form" action="">
                             <input id="m" autocomplete="off" /><button id="send_button">Send</button>
                         </form>
@@ -161,6 +164,7 @@
                 }
                 const next = typeof rooms != undefined && Array.isArray(rooms) && rooms.length > 0 ? () => 
                     {
+                        APP_STATE.active = rooms[0]
                         rooms.map( x => newElement(x, 'rooms', x, active) )
                         socket.emit('/get/messages', { rooms: rooms , token: mycookie.token})
                     }
