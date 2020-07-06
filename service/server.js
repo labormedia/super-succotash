@@ -61,7 +61,12 @@ const sserver = https.createServer({
   passphrase: 'simplephrase'
 }, app);
 
-var io = require('socket.io')(CONTEXT_INSECURE ? server : sserver);
+
+// var io = require('socket.io')(CONTEXT_INSECURE ? server : sserver); 
+// TODO: Split NODE_ENV from a new CONTEXT_INSECURE environments
+// TEST: curl https://127.0.0.1:3443 --insecure
+// IPTABLES: sudo iptables -I INPUT -p tcp --dport 3443 -j ACCEPT
+var io = require('socket.io')(sserver)
 var iomiddleware = require('socketio-wildcard')();
 
 io.use(iomiddleware);
@@ -129,37 +134,51 @@ io.on('connection', (socket) => {
           data: JSON.stringify(data)
         }
         apiClient(options, (x) => {
+          // console.log('ROOM RESPONSE when GETTING', x)
           io.emit('#messages', x)
         })
       }
       data.rooms.map( x => resolve(x)() )
     });
-    socket.on('/send/message', (msg) => {
+    socket.on('/message/send', (msg) => {  // NEEDS msg.token, msg.room
       const data = msg
-      const resolve = id => !data || !data.token || data.token == 'no_token' ? () => io.emit('ping', '{ message: "not authorized" }') : () => {
-        const options = {
-          hostname: '127.0.0.1',
-          port: 10443,
-          path: `/api/v1/room/`+[id,'send'].join('/'),
-          METHOD: 'POST',
-          token: data.token,
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': data.length
-          },
-          rejectUnauthorized: !CONTEXT_INSECURE,
-          data: JSON.stringify(data)
+      const resolve = id => !data || !data.token || data.token == 'no_token' ? 
+        () => io.emit('ping', '{ message: "not authorized" }') 
+      : 
+        () => {
+          const options = {
+            hostname: '127.0.0.1',
+            port: 10443,
+            path: `/api/v1/room/`+[id,'send'].join('/'),
+            METHOD: 'POST',
+            token: data.token,
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': data.length
+            },
+            rejectUnauthorized: !CONTEXT_INSECURE,
+            data: JSON.stringify(data)
+          }
+          data.room && data.room != '' ? 
+            apiClient(options, (x) => {
+              // console.log('ROOM RESPONSE when SENDING', x)
+              io.emit('#messages', x)
+            })
+          :
+            (() => {
+              console.log('to #system: { message: "invalid room (enter a room first ?)" }')
+              io.emit('#system', '{ message: "invalid room (enter a room first ?)" }')
+            })()
         }
-        apiClient(options, (x) => {
-          io.emit('#messages', x)
-        })
-      }
+      console.log('send to room', data)
       resolve(data.room)()
+      // resolve('myinexistentroom')()
     });
+    socket.on('/room/join', (msg) => { console.log('WANTS TO JOIN ROOM:', msg)})
 });
 
 
-server.listen(3000, () => {
+server.listen(3000, '0.0.0.0',() => {
   console.log('insecure server listening on *:3000');
 });
 
@@ -188,9 +207,16 @@ const apiClient = (params, cb) => {
   }
   const apiRequest = https.request(options, response => {
     // console.log(`statusCode: ${response.statusCode}`)
+
     response.on('data', d => {
-      const toSend = d.toString('utf8')
-      cb(JSON.parse(toSend))
+      // console.log('API RESPONSE:', response)
+      try {
+        const toSend = d.toString('utf8')
+        const parsed = JSON.parse(toSend);
+        cb(parsed)
+      } catch(e) {
+          console.log('Error: Unrecognizable response', d); // error in the above string (in this case, yes)!
+      }
     })
   })
 

@@ -4,8 +4,8 @@ version:
 all:
 	make stop
 	make clean
-	make build
 	make compose
+	make build
 	make init
 
 configure:
@@ -29,11 +29,6 @@ clean:
 	rm -rf certs
 	rm -rf logs
 
-run:
-	@echo "Starting services..."
-	NODE_ENV=development swagger project start redis-api > logs/swagger-debug.log 2>&1 &
-	NODE_ENV=development node service/server.js > logs/service-debug.log 2>&1 &
-
 stop:
 	@echo "Stopping services..."
 	for number in `ps -ef | awk '/[s]wagger project start redis-api/{print $$2}'` ; do echo killing pid $$number; kill -9 $$number ; done
@@ -41,6 +36,15 @@ stop:
 	for number in `ps -ef | awk '/[n]ode\sservice\/server.js/{print $$2}'` ; do echo killing pid $$number; kill -9 $$number ; done
 	for number in `ps -ef | awk '/[n]ode\sapp.js/{print $$2}'` ; do echo killing pid $$number; kill -9 $$number ; done
 	for number in `ps -ef | awk '/tail\s-f\s.\/logs\/service-debug.log/{print $$2}'` ; do echo killing pid $$number; kill -9 $$number ; done
+
+run:
+	@echo "Starting services..."
+	NODE_ENV=development swagger project start redis-api > logs/swagger-debug.log 2>&1 &
+	NODE_ENV=development node service/server.js > logs/service-debug.log 2>&1 &
+
+restart:
+	make stop
+	make run
 
 show:
 	echo "processes"

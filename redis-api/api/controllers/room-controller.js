@@ -35,7 +35,7 @@ async function getMessages (args,res) {
     const number = parseInt(args.swagger.params.number.value)
     if (typeof roomMD5 == 'string' && typeof number == 'number' && number > 0 && number < 100) {
       const roomKey = getMembersKey(roomMD5)
-      const messages = (await commands.xrange(roomMD5, '-', '+', 'COUNT', number)).map(result => parseChannelMessages(result, roomMD5));
+      const messages = (await commands.xrevrange(roomMD5, '+', '-', 'COUNT', number)).reverse().map(result => parseChannelMessages(result, roomMD5));
       var response = messages ? `{ "room": "${roomMD5}", "messages": ${JSON.stringify(messages)} }` : `{ "message": "No connection." }`
       return res.status(403).end(response);
     } else {
@@ -97,7 +97,7 @@ async function joinRoom (args,res) {
 
 async function sendMessage (args,res) {
   const params = args.body
-  if (!args.swagger.params.id || !params.cookie.username || !params.cookie.domain || !params.cookie.role || !params.message) {
+  if (!args.swagger.params.id || !args.swagger.params.id.value || !params.cookie.username || !params.cookie.domain || !params.cookie.role || !params.message) {
     console.log('wrong parameters', args.body)
     var response = '{ "message": "Error: No params" }';
     res.writeHead(400, { "Content-Type": "application/json" });
@@ -124,15 +124,15 @@ async function sendMessage (args,res) {
         console.log('is member ?', isMember)
         // await commands.sadd(await commands.hget([userMD5,'profile'].join(':'), 'hash:rooms'), roomMD5);
         const previousMessage = await commands.xrevrange(roomMD5,'+', '-', 'COUNT', 1)
-        console.log('previous message', previousMessage)
+        // console.log('previous message', previousMessage)
         const previousObject = ( y => y.reduce( (a,x,i) => {i%2 ? a[y[i-1]] = x : a; return a }, {} ) )(previousMessage[0][1])
         console.log('previous Object', previousObject)
         const messageId = isMember ? await commands.xadd(roomMD5, '*', 'message', message, 'user', username, 'title', title != '' ? title : previousObject.title, 'domain',domain, 'room', roomMD5) : previousObject.room;
         console.log('message id',messageId)
-        const messages = await commands.xrevrange(roomMD5,'+', '-', 'COUNT', 25);
+        const messages = (await commands.xrevrange(roomMD5,'+', '-', 'COUNT', 25)).reverse().map(result => parseChannelMessages(result, roomMD5));
         
-        console.log('messages',messages)
-        var response = messageId ? `{ "room": "${roomMD5}", "messages": ${JSON.stringify(messages.reverse())}, "messageId": "${messageId}" }` : `{ "message": "No connection." }`
+        // console.log('messages',messages)
+        var response = messageId ? `{ "room": "${roomMD5}", "messages": ${JSON.stringify(messages)}, "messageId": "${messageId}" }` : `{ "message": "No connection." }`
         return res.status(200).end(response);
       } else {
         var response = `{ "Error": "user or domain does not exist" }`
@@ -190,7 +190,7 @@ async function pollNewMessages (args,res) {
     .then( x => {
       const next = !x ? res.end() : block(delay)
     })
-  block(delay)
+  // block(delay)
 
   function doUncork(stream) {
     stream.uncork();
